@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { connect } from "react-redux";
 //import { adsSales } from "../redux/actions/adsActions";
 import PropTypes from "prop-types";
+import { Link } from "react-router-dom";
 
 
 function Login({
@@ -30,6 +31,18 @@ function Login({
           }
         })}
       />
+       <ErrorMessage
+        errors={errors}
+        name="emailId"
+        render={({ messages }) => {
+          console.log("messages", messages);
+          return messages
+            ? Object.entries(messages).map(([type, message]) => (
+                <p key={type}>{message}</p>
+              ))
+            : null;
+        }}
+      />
        <label htmlFor="password">Password</label>
       <input id="password" type="password"
         {...register("password", {
@@ -40,9 +53,10 @@ function Login({
           }
         })}
       />
+     
       <ErrorMessage
         errors={errors}
-        name="ccnumber"
+        name="password"
         render={({ messages }) => {
           console.log("messages", messages);
           return messages
@@ -52,7 +66,8 @@ function Login({
             : null;
         }}
       />
-      <a href="/payment/">Continue as guest</a>
+      
+      <Link to="/payment">Continue as guest</Link>
       <input type="submit" value="login"/>
     </form>
     
