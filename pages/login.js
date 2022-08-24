@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { connect } from "react-redux";
 //import { adsSales } from "../redux/actions/adsActions";
 import PropTypes from "prop-types";
-import { Link } from "react-router-dom";
+import Link from 'next/link'
 
 
 function Login({
@@ -67,7 +67,7 @@ function Login({
         }}
       />
       
-      <Link to="/payment">Continue as guest</Link>
+      <Link href="/payment" >Continue as guest</Link>
       <input type="submit" value="login"/>
     </form>
     
