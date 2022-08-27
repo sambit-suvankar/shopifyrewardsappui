@@ -180,3 +180,11 @@ button {
   padding: 10px 20px;
   border-radius: 4px;
 }
+.payment_details{
+  color: white;
+  text-align: center;
+}
+.error{
+  color: red;
+  font-size: medium;
+}

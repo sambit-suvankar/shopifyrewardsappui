@@ -1,28 +1,38 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { ErrorMessage } from "@hookform/error-message";
 import { useForm } from "react-hook-form";
 import { connect } from "react-redux";
-//import { adsSales } from "../redux/actions/adsActions";
 import PropTypes from "prop-types";
 import Link from 'next/link'
-
+import {useRouter} from "next/router"
+import { fetchPaymentRequest } from "../../store/actions/adsActions";
 
 function Login({
+  fetchPaymentRequest,
+  paymentReq,
+  loading,
   ...props
 }) {
   const { register, formState: { errors }, handleSubmit } = useForm({criteriaMode: "all"});
-  
   const onSubmit = (data) => {
-    console.log("login "+data);
-    
+    console.log("login "+data);    
   }
-
+  const { slug } = useRouter().query;
+  const id = slug && slug.length > 0 && slug[0];
+ useEffect (() => {
+  
+    if(id){
+      fetchPaymentRequest(id);
+    }
+  },[id]);
   return (
-    <>
+   <>
+        
+    <h1>{loading?"Loading.....":""}</h1>
     <form onSubmit={handleSubmit(onSubmit)}>
-      <h1>Login</h1>
+      <h1>Login{paymentReq&&paymentReq.id}</h1>
       <label htmlFor="emailId">Email</label>
-      <input id="emailId" type={"email"}
+      <input id="emailId" type={"email"} 
         {...register("emailId", {
           required: "This Email is required.",
           pattern: {
@@ -70,17 +80,26 @@ function Login({
       <Link href="/payment" >Continue as guest</Link>
       <input type="submit" value="login"/>
     </form>
-    
-    </>
+    {
+      paymentReq && 
+      <div className="payment_details">
+        <Link href={paymentReq.cancel_url} >Cancel and go back to store</Link>
+      </div>
+    }
+   </>
+
   );
 }
 function mapStateToProps(state, ownProps) {
   return {
-    salesResult: state.sales,
+    paymentReq: JSON.stringify(state.adsServices)!== '{}'  && state.adsServices.paymentReq,
+    loading: state.apiCallsInProgress > 0 ? true: false
   };
 }
 const mapDispatchToProps = {
-  //adsSales 
+  fetchPaymentRequest 
 };
-
+Login.propTypes = {
+    loading: PropTypes.bool.isRequired
+};
 export default connect(mapStateToProps, mapDispatchToProps)(Login);
