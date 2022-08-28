@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { connect } from "react-redux";
 import { adsSales } from "../store/actions/adsActions";
 import PropTypes from "prop-types";
-import { paymentResolve } from "../store/api/adsApi"
 import { store } from "../store/store";
 import Link from "next/link";
 
@@ -39,33 +38,54 @@ function CreditCardForm({
       alert("Failed to ADS Sales", error);
     });
   }
+
   useEffect(()=>{
     console.log(paymentReq,makeSalesResponse);
+    let shop = paymentReq ? paymentReq.cancel_url:"";
+    let httpsLength = "https://".length;
+    let lastIndex = shop.indexOf('.com')-4;
+    shop = shop.substr(httpsLength,lastIndex);  
     
-    if(makeSalesResponse && makeSalesResponse.status === 'success'){
+    if(makeSalesResponse){
       let accessToken = makeSalesResponse.accessToken;
-      let shop = paymentReq.cancel_url;
-      let httpsLength = "https://".length;
-      let lastIndex = shop.indexOf('.com')-4;
-      shop = shop.substr(httpsLength,lastIndex);  
       let payload = {
         id:paymentReq.gid,
         shop:shop,
         accesstoken:accessToken
       }
-      let result = paymentResolve(payload);
-      if(result.url){
-
+      if(makeSalesResponse.status === 'success'){
+        payload = {
+          ...payload,
+          type:"paymentresolve"
+        }
+      }else if(makeSalesResponse.status === 'failed'){
+        payload = {
+          ...payload,
+          type:"paymentreject",
+          reason: {
+            code: makeSalesResponse.code,
+            merchantMessage: makeSalesResponse.errorMessage
+          }
+        }
       }
-    }else if(makeSalesResponse && makeSalesResponse.status === 'failed'){
-
+      fetch('/api/'+payload.type,{
+        method:  "POST", // POST for create, PUT to update when id already exists.
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+      .then((res) => res.json())
+      .then((data) => {
+        window.location.href = data.url;
+      });
     }
+      
   },[paymentReq,makeSalesResponse]);
-  
+ 
   return (
     <>
-    <h1>Do NOt Refresh The page</h1>
+    <h1>Do Not Refresh The page </h1>
     <h1>TrendSetter Rewards</h1>
+    
     <div className="payment_details">
       Amount to be paid : {paymentReq && '$'+ paymentReq.amount}
     </div>
@@ -107,15 +127,14 @@ function CreditCardForm({
 function mapStateToProps(state, ownProps) {
   return {
     paymentReq : state.adsServices.paymentReq,
-    makeSalesResponse:state.adsServices.makeSalesResponse,
+    makeSalesResponse:state.adsServices.makeSalesResponse
   };
 }
 const mapDispatchToProps = {
-  adsSales 
+  adsSales
 };
 CreditCardForm.propTypes = {
   adsSales: PropTypes.func.isRequired,
 };
-
 
 export default connect(mapStateToProps, mapDispatchToProps)(CreditCardForm);
