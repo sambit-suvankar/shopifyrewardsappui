@@ -16,7 +16,7 @@ function CreditCardForm({
   const { register, formState: { errors }, handleSubmit } = useForm({criteriaMode: "all"});
   const {loading, setLoading} = useState(false);
   const onSubmit = (data) => {
-    console.log(data.ccnumber);
+    console.log('onSubmit paymentReq',paymentReq)
     let cardNumber = data.ccnumber;
     let address1 = paymentReq && paymentReq.customer.billing_address.line1;
     let postalCode = paymentReq && paymentReq.customer.billing_address.postal_code;
