@@ -23,9 +23,8 @@ export default async function(req,res){
   try {
     const response = await client.request(rejectQuery, variables, requestHeaders);
     console.log("Success ", JSON.stringify(response, undefined, 2));
-    let result = JSON.parse(response);
-    let errors = result.data.paymentSessionResolve.userErrors;
-    let redirect_url = result.data.paymentSessionResolve.paymentSession.nextAction.context.redirectUrl;
+    let redirect_url = response.paymentSessionReject.paymentSession.nextAction.context.redirectUrl;
+    let errors = response.paymentSessionReject.userErrors;
     if(errors.length == 0){
       result = {"url":redirect_url} ;
     }else{
@@ -33,7 +32,7 @@ export default async function(req,res){
     }
 
   } catch (error) {
-    console.error("Error ", JSON.stringify(error, undefined, 2));
+    console.error("Error=> ", JSON.stringify(error, undefined, 2));
     result = {"errors":"failed PaymentResolve"};
   }
   res.status(200).json(result)

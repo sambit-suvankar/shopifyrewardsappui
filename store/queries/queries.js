@@ -3,9 +3,6 @@ export const resolveQuery = gql`mutation PaymentSessionResolve($id: ID!, $author
 	paymentSessionResolve(id: $id, authorizationExpiresAt: $authorizationExpiresAt) {
 	  paymentSession {
 		id
-		status {
-		  code
-		}
 		nextAction {
 		  action
 		  context {
@@ -26,7 +23,6 @@ export const resolveQuery = gql`mutation PaymentSessionResolve($id: ID!, $author
     paymentSessionReject(id: $id, reason: $reason) {
       paymentSession {
         id
-        status
         nextAction {
           action
           context {

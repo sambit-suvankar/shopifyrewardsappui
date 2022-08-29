@@ -24,18 +24,18 @@ export default async function(req,res){
   try {
     const response = await client.request(resolveQuery, variables, requestHeaders);
     console.log("Success ", JSON.stringify(response, undefined, 2));
-    let result = JSON.parse(response);
-    let errors = result.data.paymentSessionResolve.userErrors;
+    let redirect_url = response.paymentSessionResolve.paymentSession.nextAction.context.redirectUrl;
+
+    let errors = response.paymentSessionResolve.userErrors;
     if(errors.length == 0){
-        let redirect_url = result.data.paymentSessionResolve.paymentSession.nextAction.context.redirectUrl;
-        result = {"url":redirect_url} ;
+      result = {"url":redirect_url} ;
     }else{
-      result = {"errors":errors};
-   }
+      result = {"errors":errors,"url":redirect_url};
+    }
       
   } catch (error) {
       console.error("Error ", JSON.stringify(error, undefined, 2));
-      result = {"errors":"failed PaymentResolve"};
+      result = {"errors":"failed paymentSessionResolve"};
   }
   res.status(200).json(result);
 }
