@@ -41,13 +41,14 @@ function CreditCardForm({
   }
   
   useEffect(()=>{
-    console.log(paymentReq,makeSalesResponse);
+    console.log('paymentReq',paymentReq);
     let shop = paymentReq ? paymentReq.cancel_url:"";
     let httpsLength = "https://".length;
     let lastIndex = shop.indexOf('.com')-4;
     shop = shop.substr(httpsLength,lastIndex);  
   
-    if(makeSalesResponse){
+    console.log('makeSalesResponse',makeSalesResponse)
+    if(makeSalesResponse && makeSalesResponse.accessToken){
       let accessToken = makeSalesResponse.accessToken;
       let payload = {
         id:paymentReq.gid,
@@ -69,6 +70,7 @@ function CreditCardForm({
           }
         }
       }
+      console.log(payload.type)
       fetch('/api/'+payload.type,{
         method:  "POST", // POST for create, PUT to update when id already exists.
         headers: { "content-type": "application/json" },
