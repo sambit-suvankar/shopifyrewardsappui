@@ -12,7 +12,7 @@ export function sales3x(payload) {
     .catch(handleError);
 }
 export function paymentRequest(id) {
-  return fetch(baseUrl + "request/" + id , {
+  return fetch(baseUrl + "request/'" + id +"'", {
     method:  "GET",
    // headers: { "content-type": "application/json" },
   })
