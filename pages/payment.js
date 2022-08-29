@@ -14,20 +14,21 @@ function CreditCardForm({
   ...props
 }) {
   const { register, formState: { errors }, handleSubmit } = useForm({criteriaMode: "all"});
+  const {loading, setLoading} = useState(false);
   const onSubmit = (data) => {
     console.log(data.ccnumber);
     let cardNumber = data.ccnumber;
-    let address1 = paymentReq.customer.billing_address.line1;
-    let postalCode = paymentReq.customer.billing_address.postal_code;
-    let amount = paymentReq.amount;
-    let shop = paymentReq.cancel_url;
+    let address1 = paymentReq && paymentReq.customer.billing_address.line1;
+    let postalCode = paymentReq && paymentReq.customer.billing_address.postal_code;
+    let amount = paymentReq && paymentReq.amount;
+    let shop = paymentReq && paymentReq.cancel_url;
     let httpsLength = "https://".length;
     let lastIndex = shop.indexOf('.com')-4;
     shop = shop.substr(httpsLength,lastIndex);
 
     const payload = {
       "creditCardNumber": cardNumber,
-      "amount": paymentReq.amount,
+      "amount": amount,
       "billingAddress":{
         "address1": address1,
         "postalCode": postalCode
@@ -38,14 +39,14 @@ function CreditCardForm({
       alert("Failed to ADS Sales", error);
     });
   }
-
+  
   useEffect(()=>{
     console.log(paymentReq,makeSalesResponse);
     let shop = paymentReq ? paymentReq.cancel_url:"";
     let httpsLength = "https://".length;
     let lastIndex = shop.indexOf('.com')-4;
     shop = shop.substr(httpsLength,lastIndex);  
-    
+  
     if(makeSalesResponse){
       let accessToken = makeSalesResponse.accessToken;
       let payload = {
@@ -83,6 +84,7 @@ function CreditCardForm({
  
   return (
     <>
+    { paymentReq? <>
     <h1>Do Not Refresh The page </h1>
     <h1>TrendSetter Rewards</h1>
     
@@ -120,7 +122,8 @@ function CreditCardForm({
       <input type="submit" value="pay"/>
     </form>
     Payment Successfull <Link href="">click here</Link> to complete order.
-    <div className="error"></div>
+    <div className="error"></div></>
+    : <p>Session timed out!!! Please go back to shopify </p>}
     </>
   );
 }
