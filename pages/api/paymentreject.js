@@ -25,11 +25,11 @@ export default async function(req,res){
     console.log("Success ", JSON.stringify(response, undefined, 2));
     let result = JSON.parse(response);
     let errors = result.data.paymentSessionResolve.userErrors;
+    let redirect_url = result.data.paymentSessionResolve.paymentSession.nextAction.context.redirectUrl;
     if(errors.length == 0){
-      let redirect_url = result.data.paymentSessionResolve.paymentSession.nextAction.context.redirectUrl;
       result = {"url":redirect_url} ;
     }else{
-      result = {"errors":errors};
+      result = {"errors":errors,"url":redirect_url};
     }
 
   } catch (error) {
