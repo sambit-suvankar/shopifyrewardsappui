@@ -75,8 +75,9 @@ function CreditCardForm({
         body: JSON.stringify(payload)
       })
       .then((res) => res.json())
-      .then((data) => {
-        window.location.href = data.url;
+      .then((res) => {
+        console.log("Payment"+payload.type+ JSON.stringify(res));
+        window.location.href = res.url;
       });
     }
       
