@@ -146,7 +146,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
                       <div style={{display:"flex", justifyContent:"space-between"}}>
                         <div style={{width: "75%", marginRight: "10px"}}>
                           <label for="rcnumber">Reward Certificate Number</label>
-                          <input type="number" id="rcnumber" {...register2("rcnumber",{minLength: {
+                          <input id="rcnumber" {...register2("rcnumber",{minLength: {
                         value: 16,
                         message: "Card number must exceed 15 digits",
                       }})}></input>
@@ -154,14 +154,17 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
                         </div>
                         <div style={{width : "25%"}}>
                           <label for="rcnumber">PIN Number</label>
-                          <input type="number" id="rcpin" {...register2("rcpin")}></input>
+                          <input id="rcpin" {...register2("rcpin",{minLength: {
+                        value: 4,
+                        message: "PIN must be of 4 digits",
+                      }})}></input>
                         </div>
                       </div>
                       <div className="rewardButtons">
                         <button type="submit" value="Apply">APPLY</button>
                         <button type="button" onClick={()=> toggleModal()}>CHECK BALANCE</button>
                       </div>
-                      
+                      <span>$5.99 successfully applied to order. Your card will have $494.01 balance remaining after this transaction is completed.</span>
                       {/* <button type="button" onClick={()=> onClickReward()}>CANCEL</button> */}
                     </form>
                 </div>
