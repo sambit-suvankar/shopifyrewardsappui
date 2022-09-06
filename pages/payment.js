@@ -128,7 +128,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
           <div className="payment_detais_container">
             <div className="card-details">
               <div className="reward-details-container">
-                <label for="reward" className="reward" onClick={()=> onClickReward()}>
+                <label htmlFor="reward" className="reward" onClick={()=> onClickReward()}>
                   {collapsible ? <IoMdArrowDropdown style={{ height: "22px", width: "5%" }}/> : <IoMdArrowDropright style={{ height: "22px", width: "5%" }}/>}
                     
                     <span style={{color : "black", fontWeight: "bold"}}>PAY WITH A REWARD CERTIFICATE</span>  
@@ -136,7 +136,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
 
                 <div className="reward-cards">
                   {rcNumber.length > 0 ? 
-                  rcNumber.map(e => (<div className="rc-card" ><span>CERTIFICATE {e}</span> <button id={e} onClick={(e)=> deleteRcNumber(e) }>REMOVE</button></div>)) : 
+                  rcNumber.map((e,i) => (<div className="rc-card" key={i}><span>CERTIFICATE {e}</span> <button id={e} onClick={(e)=> deleteRcNumber(e) }>REMOVE</button></div>)) : 
                   <></>
                   }
                 </div>
@@ -145,7 +145,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
                     <form style={{ width: "100%", margin: "0"}} onSubmit={handleSubmit2(onRcNumberSubmit)}>
                       <div style={{display:"flex", justifyContent:"space-between"}}>
                         <div style={{width: "75%", marginRight: "10px"}}>
-                          <label for="rcnumber">Reward Certificate Number</label>
+                          <label htmlFor="rcnumber">Reward Certificate Number</label>
                           <input id="rcnumber" {...register2("rcnumber",{minLength: {
                         value: 16,
                         message: "Card number must exceed 15 digits",
@@ -153,7 +153,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
                       
                         </div>
                         <div style={{width : "25%"}}>
-                          <label for="rcnumber">PIN Number</label>
+                          <label htmlFor="rcnumber">PIN Number</label>
                           <input id="rcpin" {...register2("rcpin",{minLength: {
                         value: 4,
                         message: "PIN must be of 4 digits",
@@ -170,7 +170,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
                 </div>
               </div>
               <div className="card_details_container">
-                <label for="credit" className="credit">
+                <label htmlFor="credit" className="credit">
                   <FaRegCreditCard
                     style={{ height: "22px", width: "5%" }}
                   ></FaRegCreditCard>
