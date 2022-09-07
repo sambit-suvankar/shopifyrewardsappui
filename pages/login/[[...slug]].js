@@ -34,7 +34,7 @@ function Login({
     // Construct the Multipassify encoder
     var multipassify = new Multipassify("b740a1d5ea31cb36cb7d7fc0e8291f5c");
     // Create your customer data hash
-    var customerData = { email: paymentReq.customer.email, remote_ip:ip, return_to:"http://localhost:3000/payment"};
+    var customerData = { email: paymentReq.customer.email, remote_ip:ip, return_to:"https://shopifyrewardsappui.vercel.app/payment"};
 
     // Encode a Multipass token
     var token = multipassify.encode(customerData);
