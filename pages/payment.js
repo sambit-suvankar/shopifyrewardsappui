@@ -228,7 +228,11 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
             </div>
 
             <div className="payment_details">
-              Amount to be paid : {paymentReq && "$" + paymentReq.amount}
+              <h4>Payment Summary</h4>
+              <span>Amount to be paid : <span>{paymentReq && "$" + paymentReq.amount}</span></span>
+              <span>Amount paid by reward certificate : <span>{paymentReq && "$" + paymentReq.amount}</span></span>
+              <span>Cost to credit card : <span>{paymentReq && "$" + paymentReq.amount}</span></span>
+              
             </div>
           </div>
           Payment Successfull <Link href="">click here</Link> to complete order.
