@@ -734,6 +734,11 @@ cross-spawn@^7.0.2:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
+crypto@0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/crypto/-/crypto-0.0.3.tgz#470a81b86be4c5ee17acc8207a1f5315ae20dbb0"
+  integrity sha512-Q6Ka98WcvWXXg+9cnqd3jHpTSIOaH6/q0m/bESMfQo/0uFxy6e/7EqVS4JdaWx9qLdqV56tDufy2b12dj7BHJg==
+
 csstype@^3.0.2:
   version "3.1.0"
   resolved "https://registry.npmjs.org/csstype/-/csstype-3.1.0.tgz"
@@ -1996,6 +2001,13 @@ ms@2.1.2, ms@^2.0.0, ms@^2.1.1:
   version "2.1.2"
   resolved "https://registry.npmjs.org/ms/-/ms-2.1.2.tgz"
   integrity sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
+
+multipassify@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/multipassify/-/multipassify-1.1.0.tgz#818d87aed6e2c594fb7578e2bb86466ebe7571fb"
+  integrity sha512-l56wlthlHUNHjorBiZM6tCBU6MuTjDXvcTIoxDkFdYDTxbQtSKdz172jFi2spdEWqkhSUkqQukj6W3CZZXvfew==
+  dependencies:
+    crypto "0.0.3"
 
 mysql2@^2.3.3:
   version "2.3.3"

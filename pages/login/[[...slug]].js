@@ -1,9 +1,10 @@
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import { ErrorMessage } from "@hookform/error-message";
 import { useForm } from "react-hook-form";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
-import Link from 'next/link'
+import Link from 'next/link';
+import Multipassify from 'multipassify';
 import {useRouter} from "next/router"
 import { fetchPaymentRequest } from "../../store/actions/adsActions";
 
@@ -11,23 +12,50 @@ function Login({
   fetchPaymentRequest,
   paymentReq,
   loading,
+  cards,
   ...props
 }) {
   const { register, formState: { errors }, handleSubmit } = useForm({criteriaMode: "all"});
+  const {hasCards, setHasCards} = useState(false);
+  const [ip, setIP] = useState('');
+
   const onSubmit = (data) => {
     console.log("login "+data);    
+  }
+  const getIPData = async () => {
+    const res = await fetch('https://geolocation-db.com/json/');
+    const json = await res.json();
+    console.log(json);
+    setIP(json.IPv4);
+  }
+  const handleOnClick = () =>{
+    console.log('Login wirh shopify '+paymentReq.customer.email);
+
+    // Construct the Multipassify encoder
+    var multipassify = new Multipassify("b740a1d5ea31cb36cb7d7fc0e8291f5c");
+    // Create your customer data hash
+    var customerData = { email: paymentReq.customer.email, remote_ip:ip, return_to:"http://localhost:3000/payment"};
+
+    // Encode a Multipass token
+    var token = multipassify.encode(customerData);
+    console.log('token',token)
+    // Generate a Shopify multipass URL to your shop
+    var url = multipassify.generateUrl(customerData, "dev1-lord-and-taylor.myshopify.com");
+    console.log('url',url+"/");
+    //window.location.href = url+"/"+token;
   }
   const { slug } = useRouter().query;
   const id = slug && slug.length > 0 && slug[0];
  useEffect (() => {
-  
+  console.log(id)
     if(id){
+      getIPData();
       fetchPaymentRequest(id);
     }
   },[id]);
   return (
    <>
-        
+
     <h1>{loading?"Loading.....":""}</h1>
     <form onSubmit={handleSubmit(onSubmit)}>
       <h1>Login{paymentReq&&paymentReq.id}</h1>
@@ -84,8 +112,10 @@ function Login({
       paymentReq && 
       <div className="payment_details">
         <Link href={paymentReq.cancel_url} >Cancel and go back to store</Link>
+        <button onClick={() => handleOnClick()}>Login with Shopify</button>
       </div>
     }
+    
    </>
 
   );
@@ -96,6 +126,13 @@ function mapStateToProps(state, ownProps) {
     loading: state.apiCallsInProgress > 0 ? true: false
   };
 }
+/* Login.getInitialProps = async (ctx) =>{
+  console.log('aa')
+  const res = await fetch('http://localhost:8080/plcc/fetchcards?email=ftf_test.ftf@gmail.com',{method:'POST'})
+  const json = await res.json();
+
+  return {cards:json}
+} */
 const mapDispatchToProps = {
   fetchPaymentRequest 
 };
