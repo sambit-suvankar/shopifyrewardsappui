@@ -13,11 +13,11 @@ function Login({
   paymentReq,
   loading,
   cards,
+  ip,
   ...props
 }) {
   const { register, formState: { errors }, handleSubmit } = useForm({criteriaMode: "all"});
   const {hasCards, setHasCards} = useState(false);
-  const [ip, setIP] = useState('');
 
   const onSubmit = (data) => {
     console.log("login "+data);    
@@ -26,10 +26,9 @@ function Login({
     const res = await fetch('https://geolocation-db.com/json/');
     const json = await res.json();
     console.log(json);
-    setIP(json.IPv4);
   }
   const handleOnClick = () =>{
-    console.log('Login wirh shopify '+paymentReq.customer.email);
+    console.log('Login wirh shopify '+paymentReq.customer.email,ip);
 
     // Construct the Multipassify encoder
     var multipassify = new Multipassify("b740a1d5ea31cb36cb7d7fc0e8291f5c");
@@ -41,15 +40,13 @@ function Login({
     console.log('token',token)
     // Generate a Shopify multipass URL to your shop
     var url = multipassify.generateUrl(customerData, "dev1-lord-and-taylor.myshopify.com");
-    console.log('url',url+"/");
-    //window.location.href = url+"/"+token;
+    window.location.href = url;
   }
   const { slug } = useRouter().query;
   const id = slug && slug.length > 0 && slug[0];
- useEffect (() => {
+  useEffect (() => {
   console.log(id)
     if(id){
-      getIPData();
       fetchPaymentRequest(id);
     }
   },[id]);
@@ -133,6 +130,19 @@ function mapStateToProps(state, ownProps) {
 
   return {cards:json}
 } */
+export async function getServerSideProps({req}) {
+  let ip;
+  if (req.headers["x-forwarded-for"]) {
+    ip = req.headers["x-forwarded-for"].split(',')[0]
+  } else if (req.headers["x-real-ip"]) {
+    ip = req.connection.remoteAddress
+  } else {
+    ip = req.connection.remoteAddress
+  }
+  return {
+    props: {ip}, // will be passed to the page component as props
+  }
+}
 const mapDispatchToProps = {
   fetchPaymentRequest 
 };
