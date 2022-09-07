@@ -1,6 +1,6 @@
 import { handleResponse, handleError } from "./apiUtils";
-const baseUrl =  "https://imuat.saadiadirect.com/ftf/plcc/";
-//const baseUrl =  "http://localhost:8080/plcc/";
+//const baseUrl =  "https://imuat.saadiadirect.com/ftf/plcc/";
+const baseUrl =  "http://localhost:8080/plcc/";
 
 export function sales3x(payload) {
   return fetch(baseUrl + "makesale" , {
