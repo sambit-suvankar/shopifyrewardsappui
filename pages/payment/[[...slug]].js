@@ -291,7 +291,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
               
             </div>
           </div>
-          <div style={{textAlign: "center"}}>Payment Successfull <Link href={paymentData.cancel_url}>Cancel and go back to store</Link> to complete order.</div>
+          <div style={{textAlign: "center", marginBottom: "40px"}}> <Link href={paymentData.cancel_url}>Cancel and go back to store</Link></div>
           <div className="error"></div>
         </>
       ) }
