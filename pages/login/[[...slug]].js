@@ -19,6 +19,8 @@ function Login({
   }
   const { slug } = useRouter().query;
   const id = slug && slug.length > 0 && slug[0];
+  // console.log(id)
+  // console.log(slug)
  useEffect (() => {
   
     if(id){
