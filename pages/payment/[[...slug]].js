@@ -1,17 +1,21 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { ErrorMessage } from "@hookform/error-message";
 import { useForm } from "react-hook-form";
+import {useRouter} from "next/router"
 import { connect } from "react-redux";
-import { adsSales } from "../store/actions/adsActions";
+import { adsSales } from "../../store/actions/adsActions";
 import PropTypes from "prop-types";
 import { FaRegCreditCard } from "react-icons/fa";
 import { IoMdArrowDropright, IoMdArrowDropdown } from "react-icons/io";
 import {ImCancelCircle} from 'react-icons/im'
-import { store } from "../store/store";
+import { store } from "../../store/store";
 import Link from "next/link";
-import {addRcNumber, removeRcNumber} from '../store/actions/apiStatusActions';
+import {addRcNumber, removeRcNumber} from '../../store/actions/apiStatusActions';
+import { fetchPaymentRequest } from '../../store/actions/adsActions';
+import * as adsApi from '../../store/api/adsApi';
+import Loader from "../loader";
 
-function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, makeSalesResponse,rcNumber, ...props }) {
+function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, makeSalesResponse, rcNumber, fetchPaymentRequest, ...props }) {
   const {
     register,
     formState: { errors },
@@ -23,18 +27,30 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
     handleSubmit : handleSubmit2,
     reset
   } = useForm({ criteriaMode: "all" });
-  const { loading, setLoading } = useState(false);
-  const  [collapsible, setCollapsible] = useState(false)
+  const [ loading, setLoading ] = useState(true);
+  const [ modalLoading, setModalLoading ] = useState(false);
+  const  [collapsible, setCollapsible] = useState(false);
+  const [paymentData, setPaymentData] = useState({})
+  let shop
+  let httpsLength
+  let lastIndex
+
+  const { slug } = useRouter().query;
+  const id = slug && slug.length > 0 && slug[0];
+
+  // console.log(id)
+
+
   const onSubmit = (data) => {
-    console.log("onSubmit paymentReq", paymentReq);
+    console.log("onSubmit paymentReq", paymentData);
     let cardNumber = data.ccnumber;
-    let address1 = paymentReq && paymentReq.customer.billing_address.line1;
+    let address1 = paymentData && paymentData.customer.billing_address.line1;
     let postalCode =
-      paymentReq && paymentReq.customer.billing_address.postal_code;
-    let amount = paymentReq && paymentReq.amount;
-    let shop = paymentReq && paymentReq.cancel_url;
-    let httpsLength = "https://".length;
-    let lastIndex = shop.indexOf(".com") - 4;
+      paymentData && paymentData.customer.billing_address.postal_code;
+    let amount = paymentData && paymentData.amount;
+    shop = paymentData && paymentData.cancel_url;
+    httpsLength = "https://".length;
+    lastIndex = shop.indexOf(".com") - 4;
     shop = shop.substr(httpsLength, lastIndex);
 
     const payload = {
@@ -51,50 +67,79 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
     });
   };
 
-  useEffect(() => {
-    //console.log('paymentReq',paymentReq);
-    let shop = paymentReq ? paymentReq.cancel_url : "";
-    let httpsLength = "https://".length;
-    let lastIndex = shop.indexOf(".com") - 4;
-    shop = shop.substr(httpsLength, lastIndex);
 
-    // console.log('makeSalesResponse',makeSalesResponse)
-    if (makeSalesResponse && makeSalesResponse.accessToken) {
-      let accessToken = makeSalesResponse.accessToken;
-      let payload = {
-        id: paymentReq.gid,
-        shop: shop,
-        accesstoken: accessToken,
-      };
-      if (makeSalesResponse.status === "success") {
-        payload = {
-          ...payload,
-          type: "paymentresolve",
-        };
-      } else if (makeSalesResponse.status === "failed") {
-        payload = {
-          ...payload,
-          type: "paymentreject",
-          reason: {
-            code: makeSalesResponse.code,
-            merchantMessage: makeSalesResponse.errorMessage,
-          },
-        };
-      }
+  useEffect(()=>{
+    if(id){
+      adsApi.paymentRequest(id)
+      .then((paymentReq) => {
+        console.log("calling........ ")
+        setPaymentData((data) => {
+          data = paymentReq;
 
-      fetch("/api/" + payload.type, {
-        method: "POST", // POST for create, PUT to update when id already exists.
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-        .then((res) => res.json())
-        .then((res) => {
-          console.log("Payment" + res.url);
-          window.location.href = res.url;
+          console.log(data);
+          
+
+          // shop = data ? data.cancel_url : "";
+          // httpsLength = "https://".length;
+          // lastIndex = shop?shop.indexOf(".com") - 4 : null;
+          // shop = shop?shop.substr(httpsLength, lastIndex) : "";
+          // console.log(shop)
+          return data
         })
-        .catch((err) => console.log("error in payment", err));
+        setLoading(false)
+        // console.log(paymentData) 
+      })
+      // console.log("mounting payment page")
+
+      
     }
-  }, [paymentReq, makeSalesResponse]);
+  },[id])
+
+  useEffect(() => {
+      
+      // console.log('makeSalesResponse',makeSalesResponse)
+      if (makeSalesResponse && makeSalesResponse.accessToken) {
+        let accessToken = makeSalesResponse.accessToken;
+        let payload = {
+          id: paymentData.gid,
+          shop: shop,
+          accesstoken: accessToken,
+        };
+        if (makeSalesResponse.status === "success") {
+          payload = {
+            ...payload,
+            type: "paymentresolve",
+          };
+          fetch("/api/" + payload.type, {
+            method: "POST", // POST for create, PUT to update when id already exists.
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(payload),
+          })
+            .then((res) => res.json())
+            .then((res) => {
+              console.log("Payment" + res.url);
+              window.location.href = res.url;
+            })
+            .catch((err) => console.log("error in payment", err));
+        } else if (makeSalesResponse.status === "failed") {
+          payload = {
+            ...payload,
+            type: "paymentreject",
+            reason: {
+              code: makeSalesResponse.code,
+              merchantMessage: makeSalesResponse.errorMessage,
+            },
+          };
+        }
+  
+        
+      }
+  
+      
+      // console.log("mounting for sale response")
+
+    
+  }, [makeSalesResponse]);
 
   const rewardCerf = useRef()
   const modalRef = useRef()
@@ -104,6 +149,14 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
     setCollapsible(!collapsible)
   }
   const toggleModal = ()=> {
+    setModalLoading(true)
+    setTimeout(() => {
+      setModalLoading(false)
+      modalRef.current.classList.toggle('hide-modal')
+    }, 2000);
+  }
+
+  const closeModal = () => {
     modalRef.current.classList.toggle('hide-modal')
   }
 
@@ -121,15 +174,16 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
 
   return (
     <>
-      {paymentReq ? (
+      {loading ?  (
+        <Loader/>
+      ) : (
         <>
-          <h1>Do Not Refresh The page </h1>
           <h1>TrendSetter Rewards</h1>
           <div className="payment_detais_container">
             <div className="card-details">
               <div className="reward-details-container">
                 <label htmlFor="reward" className="reward" onClick={()=> onClickReward()}>
-                  {collapsible ? <IoMdArrowDropdown style={{ height: "22px", width: "5%" }}/> : <IoMdArrowDropright style={{ height: "22px", width: "5%" }}/>}
+                  {collapsible ? <IoMdArrowDropdown style={{ height: "25px", width: "10%" }}/> : <IoMdArrowDropright style={{ height: "25px", width: "10%" }}/>}
                     
                     <span style={{color : "black", fontWeight: "bold"}}>PAY WITH A REWARD CERTIFICATE</span>  
                 </label>
@@ -172,7 +226,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
               <div className="card_details_container">
                 <label htmlFor="credit" className="credit">
                   <FaRegCreditCard
-                    style={{ height: "22px", width: "5%" }}
+                    style={{ height: "22px", width: "10%" }}
                   ></FaRegCreditCard>
                   <a
                     style={{
@@ -209,6 +263,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
                       },
                     })}
                   />
+                  {makeSalesResponse?.errorMessage ? <></> :
                   <ErrorMessage
                     errors={errors}
                     name="ccnumber"
@@ -220,7 +275,8 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
                           ))
                         : null;
                     }}
-                  />
+                  /> }
+                  {makeSalesResponse?.errorMessage ? <p>Your provided card information is not correct.</p> : <></>}
 
                   <input type="submit" value="pay" />
                 </form>
@@ -228,22 +284,24 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
             </div>
 
             <div className="payment_details">
-              Amount to be paid : {paymentReq && "$" + paymentReq.amount}
+              <h4>Payment Summary</h4>
+              <span className="payment_span">Amount to be paid : <span>{paymentData && "$" + paymentData.amount}</span></span>
+              <span className="payment_span">Amount paid by reward certificate : <span>{paymentData && "$" + paymentData.amount}</span></span>
+              <span className="payment_span">Cost to credit card : <span>{paymentData && "$" + paymentData.amount}</span></span>
+              
             </div>
           </div>
-          Payment Successfull <Link href="">click here</Link> to complete order.
+          <div style={{textAlign: "center", marginBottom: "40px"}}> <Link href={paymentData.cancel_url}>Cancel and go back to store</Link></div>
           <div className="error"></div>
         </>
-      ) : (
-        <p>Session timed out!!! Please go back to shopify </p>
-      )}
+      ) }
       <div id="modal-window" className="modal-window hide-modal" ref={modalRef}>
-        <div className="overlay" onClick={()=> toggleModal()}></div>
+        <div className="overlay" onClick={()=> closeModal()}></div>
         <div className="modal">
-          <ImCancelCircle className="cancelModal" onClick={()=> toggleModal()}/>
+          <ImCancelCircle className="cancelModal" onClick={()=> closeModal()}/>
           <h1>HOW MUCH DO I HAVE LEFT?</h1>
           <h3>Enter your 19-digit New York and Company Rewards Certificate number and your 4-digit PIN below</h3>
-          <div style={{marginTop: "50px"}}>
+          <div className="modal_form" style={{marginTop: "50px"}}>
             <form>
               <label>Reward Certificate Number</label>
               <input></input>
@@ -254,6 +312,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
           </div>
         </div>
       </div>
+      {modalLoading ? <Loader/> : <></>}
     </>
   );
 }
@@ -266,7 +325,8 @@ function mapStateToProps(state, ownProps) {
   };
 }
 const mapDispatchToProps = (dispatch) => ({
-  adsSales,
+  adsSales : (payload) => dispatch(adsSales(payload)),
+  fetchPaymentRequest : (id) => dispatch(fetchPaymentRequest(id)),
   addRcNumber : (payload)=> dispatch(addRcNumber(payload)),
   removeRcNumber : (payload) => dispatch(removeRcNumber(payload))
 });
