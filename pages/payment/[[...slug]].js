@@ -29,17 +29,14 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
   } = useForm({ criteriaMode: "all" });
   const [ loading, setLoading ] = useState(true);
   const [ modalLoading, setModalLoading ] = useState(false);
-  const  [collapsible, setCollapsible] = useState(false);
-  const [paymentData, setPaymentData] = useState({})
+  const [ collapsible, setCollapsible] = useState(false);
+  const [ paymentData, setPaymentData] = useState({})
   let shop
   let httpsLength
   let lastIndex
 
   const { slug } = useRouter().query;
   const id = slug && slug.length > 0 && slug[0];
-
-  // console.log(id)
-
 
   const onSubmit = (data) => {
     console.log("onSubmit paymentReq", paymentData);
@@ -72,34 +69,25 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
     if(id){
       adsApi.paymentRequest(id)
       .then((paymentReq) => {
-        console.log("calling........ ")
         setPaymentData((data) => {
           data = paymentReq;
-
           console.log(data);
-          
-
-          // shop = data ? data.cancel_url : "";
-          // httpsLength = "https://".length;
-          // lastIndex = shop?shop.indexOf(".com") - 4 : null;
-          // shop = shop?shop.substr(httpsLength, lastIndex) : "";
-          // console.log(shop)
           return data
         })
-        setLoading(false)
-        // console.log(paymentData) 
+        setLoading(false);
       })
-      // console.log("mounting payment page")
-
-      
     }
   },[id])
 
   useEffect(() => {
       
-      // console.log('makeSalesResponse',makeSalesResponse)
+       console.log('makeSalesResponse',makeSalesResponse)
       if (makeSalesResponse && makeSalesResponse.accessToken) {
         let accessToken = makeSalesResponse.accessToken;
+        shop = paymentData ? paymentData.cancel_url : "";
+        httpsLength = "https://".length;
+        lastIndex = shop?shop.indexOf(".com") - 4 : null;
+        shop = shop?shop.substr(httpsLength, lastIndex) : "";
         let payload = {
           id: paymentData.gid,
           shop: shop,
@@ -117,7 +105,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
           })
             .then((res) => res.json())
             .then((res) => {
-              console.log("Payment" + res.url);
+              console.log("Payment Resolved" + res.url);
               window.location.href = res.url;
             })
             .catch((err) => console.log("error in payment", err));
@@ -130,15 +118,8 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
               merchantMessage: makeSalesResponse.errorMessage,
             },
           };
-        }
-  
-        
-      }
-  
-      
-      // console.log("mounting for sale response")
-
-    
+        }    
+      } 
   }, [makeSalesResponse]);
 
   const rewardCerf = useRef()
