@@ -274,6 +274,11 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
           </div>
           <div style={{textAlign: "center", marginBottom: "40px"}}> <Link href={paymentData.cancel_url}>Cancel and go back to store</Link></div>
           <div className="error"></div>
+          <div className="footer">
+            <div></div>
+            <div><h3>&copy; POWERED BY SAADIA GROUPS</h3></div>
+            <div><a href="https://c.comenity.net/ac/fashiontofigure/public/home">PAY BILLS</a></div>
+          </div>
         </>
       ) }
       <div id="modal-window" className="modal-window hide-modal" ref={modalRef}>
@@ -294,6 +299,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
         </div>
       </div>
       {modalLoading ? <Loader/> : <></>}
+      
     </>
   );
 }

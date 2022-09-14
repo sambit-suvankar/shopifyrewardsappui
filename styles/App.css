@@ -442,3 +442,26 @@ button {
     transform: rotate(360deg);
   }
 }
+
+.footer{
+  width: 100vw;
+  height: 30vh;
+  background-color: #050505;
+  z-index: -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+.footer div{
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  align-items:center ;
+  text-align: center;
+}
+.footer div a{
+  color: #ffffff;
+}
+.footer div h3{
+  color: #ffffff;
+
+}
