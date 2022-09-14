@@ -111,12 +111,8 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
             .catch((err) => console.log("error in payment", err));
         } else if (makeSalesResponse.status === "failed") {
           payload = {
-            ...payload,
-            type: "paymentreject",
-            reason: {
-              code: makeSalesResponse.code,
-              merchantMessage: makeSalesResponse.errorMessage,
-            },
+            code: makeSalesResponse.code,
+            merchantMessage: makeSalesResponse.errorMessage
           };
         }    
       } 
@@ -276,8 +272,8 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
           <div className="error"></div>
           <div className="footer">
             <div></div>
-            <div><h3>&copy; POWERED BY SAADIA GROUPS</h3></div>
-            <div><a href="https://c.comenity.net/ac/fashiontofigure/public/home">PAY BILLS</a></div>
+            <div><h3>&copy; POWERED BY SAADIA GROUP</h3></div>
+            <div><a href="https://c.comenity.net/ac/fashiontofigure/public/home" target="_blank">PAY BILLS</a></div>
           </div>
         </>
       ) }
