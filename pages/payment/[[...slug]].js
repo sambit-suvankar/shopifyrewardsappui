@@ -14,8 +14,9 @@ import {addRcNumber, removeRcNumber} from '../../store/actions/apiStatusActions'
 import { fetchPaymentRequest } from '../../store/actions/adsActions';
 import * as adsApi from '../../store/api/adsApi';
 import Loader from "../loader";
+import RewardCardDetails from "../rewardCardDetails";
 
-function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, makeSalesResponse, rcNumber, fetchPaymentRequest, ...props }) {
+function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, makeSalesResponse, rcDetails, fetchPaymentRequest, ...props }) {
   const {
     register,
     formState: { errors },
@@ -25,12 +26,15 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
     register : register2,
     formState: { errors : errors2 },
     handleSubmit : handleSubmit2,
-    reset
+    // reset
   } = useForm({ criteriaMode: "all" });
   const [ loading, setLoading ] = useState(true);
   const [ modalLoading, setModalLoading ] = useState(false);
   const [ collapsible, setCollapsible] = useState(false);
   const [ paymentData, setPaymentData] = useState({})
+  const [ amountPaidByRC, setAmountPaidByRC ] = useState(0)
+  const [ costToCredit, setCostToCredit ] = useState(0);
+  const [ loadingSubmit, setLoadingSubmit ]= useState(false)
   let shop
   let httpsLength
   let lastIndex
@@ -41,11 +45,11 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
   const onSubmit = (data) => {
     console.log("onSubmit paymentReq", paymentData);
     let cardNumber = data.ccnumber;
-    let address1 = paymentData && paymentData.customer.billing_address.line1;
+    let address1 = paymentData && paymentData.json.customer.billing_address.line1;
     let postalCode =
-      paymentData && paymentData.customer.billing_address.postal_code;
-    let amount = paymentData && paymentData.amount;
-    shop = paymentData && paymentData.cancel_url;
+      paymentData && paymentData.json.customer.billing_address.postal_code;
+    let amount = paymentData && paymentData.json.amount;
+    shop = paymentData && paymentData.json.cancel_url;
     httpsLength = "https://".length;
     lastIndex = shop.indexOf(".com") - 4;
     shop = shop.substr(httpsLength, lastIndex);
@@ -69,14 +73,18 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
     if(id){
       adsApi.paymentRequest(id)
       .then((paymentReq) => {
-        setPaymentData((data) => {
-          data = paymentReq;
+        setPaymentData((data) => {  // Here we have set the paymentdata by fetching the API
+          data.json = JSON.parse(paymentReq.json);
+          data.status = paymentReq.status
           console.log(data);
           return data
         })
+        if(amountPaidByRC === 0){    // Amount to be paid = cost to credit if no reward card is applied
+          setCostToCredit((data)=> data = parseFloat(JSON.parse(paymentReq.json).amount))
+        }
         setLoading(false);
-      })
-    }
+      }) 
+    } 
   },[id])
 
   useEffect(() => {
@@ -84,12 +92,12 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
        console.log('makeSalesResponse',makeSalesResponse)
       if (makeSalesResponse && makeSalesResponse.accessToken) {
         let accessToken = makeSalesResponse.accessToken;
-        shop = paymentData ? paymentData.cancel_url : "";
+        shop = paymentData ? paymentData.json.cancel_url : "";
         httpsLength = "https://".length;
         lastIndex = shop?shop.indexOf(".com") - 4 : null;
         shop = shop?shop.substr(httpsLength, lastIndex) : "";
         let payload = {
-          id: paymentData.gid,
+          id: paymentData.json.gid,
           shop: shop,
           accesstoken: accessToken,
         };
@@ -118,13 +126,10 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
       } 
   }, [makeSalesResponse]);
 
-  const rewardCerf = useRef()
   const modalRef = useRef()
 
-  const onClickReward = ()=> {
-    rewardCerf.current.classList.toggle('hide-reward')
-    setCollapsible(!collapsible)
-  }
+ 
+  // Function to toggle the Check balance Modal
   const toggleModal = ()=> {
     setModalLoading(true)
     setTimeout(() => {
@@ -133,21 +138,41 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
     }, 2000);
   }
 
+  // Function to close the check balance modal
   const closeModal = () => {
     modalRef.current.classList.toggle('hide-modal')
   }
 
-  const onRcNumberSubmit = (data) => {
+  // This Function is called at the time of applying Reward card 
+  const onRcNumberSubmit = async(data) => {
     console.log(data)
+    if(!data.rcnumber || !data.rcpin){
+      return
+    }
+    setLoadingSubmit(true)
     const rcNumber = data.rcnumber;
-    addRcNumber(rcNumber)
-    reset()
+    const rcPin = data.rcpin
+    const result = await fetch("http://localhost:3000/api/getrcbalance1")
+    let balanceData = await result.json()
+    
+    if(costToCredit < balanceData.balance && costToCredit !== 0){
+      balanceData.balance = parseFloat(costToCredit)
+      addRcNumber({rcNumber, rcPin, amountPaidByRC : balanceData.balance});
+    }else if(costToCredit > balanceData.balance && costToCredit !== 0){
+      addRcNumber({rcNumber, rcPin, amountPaidByRC : balanceData.balance})
+    }
+
+    setLoadingSubmit(false)
   }
 
-  const deleteRcNumber = (e) =>{
-    console.log(e.target.id)
-    removeRcNumber(e.target.id)
-  }
+  //Each time Reward card details getting saved inside the store our cost to credit card amount will get calculated
+  useEffect(()=>{
+    let totalAmount = rcDetails.reduce((acc, obj) => acc + obj.amountPaidByRC, 0)
+    setAmountPaidByRC(totalAmount)
+    setCostToCredit(paymentData.json && parseFloat((paymentData.json.amount - totalAmount).toFixed(2)))
+  },[rcDetails])
+
+
 
   return (
     <>
@@ -158,48 +183,16 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
           <h1>TrendSetter Rewards</h1>
           <div className="payment_detais_container">
             <div className="card-details">
-              <div className="reward-details-container">
-                <label htmlFor="reward" className="reward" onClick={()=> onClickReward()}>
-                  {collapsible ? <IoMdArrowDropdown style={{ height: "25px", width: "10%" }}/> : <IoMdArrowDropright style={{ height: "25px", width: "10%" }}/>}
-                    
-                    <span style={{color : "black", fontWeight: "bold"}}>PAY WITH A REWARD CERTIFICATE</span>  
-                </label>
-
-                <div className="reward-cards">
-                  {rcNumber.length > 0 ? 
-                  rcNumber.map((e,i) => (<div className="rc-card" key={i}><span>CERTIFICATE {e}</span> <button id={e} onClick={(e)=> deleteRcNumber(e) }>REMOVE</button></div>)) : 
-                  <></>
-                  }
-                </div>
-                
-                <div className="rewards-certificate hide-reward" ref={rewardCerf}>
-                    <form style={{ width: "100%", margin: "0"}} onSubmit={handleSubmit2(onRcNumberSubmit)}>
-                      <div style={{display:"flex", justifyContent:"space-between"}}>
-                        <div style={{width: "75%", marginRight: "10px"}}>
-                          <label htmlFor="rcnumber">Reward Certificate Number</label>
-                          <input id="rcnumber" {...register2("rcnumber",{minLength: {
-                        value: 16,
-                        message: "Card number must exceed 15 digits",
-                      }})}></input>
-                      
-                        </div>
-                        <div style={{width : "25%"}}>
-                          <label htmlFor="rcnumber">PIN Number</label>
-                          <input id="rcpin" {...register2("rcpin",{minLength: {
-                        value: 4,
-                        message: "PIN must be of 4 digits",
-                      }})}></input>
-                        </div>
-                      </div>
-                      <div className="rewardButtons">
-                        <button type="submit" value="Apply">APPLY</button>
-                        <button type="button" onClick={()=> toggleModal()}>CHECK BALANCE</button>
-                      </div>
-                      <span>$5.99 successfully applied to order. Your card will have $494.01 balance remaining after this transaction is completed.</span>
-                      {/* <button type="button" onClick={()=> onClickReward()}>CANCEL</button> */}
-                    </form>
-                </div>
-              </div>
+              <RewardCardDetails
+              register2={register2}
+              error2={errors2}
+              handleSubmit2={handleSubmit2}
+              onRcNumberSubmit={(data)=> onRcNumberSubmit(data)}
+              toggleModal={() => toggleModal()}
+              loadingSubmit={loadingSubmit}
+              setLoadingSubmit={(v) => setLoadingSubmit(v)}
+              // reset={()=> reset()}
+              />
               <div className="card_details_container">
                 <label htmlFor="credit" className="credit">
                   <FaRegCreditCard
@@ -222,7 +215,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
                   </a>
                 </label>
 
-                <form onSubmit={handleSubmit(onSubmit)}>
+                <form id="ccForm" onSubmit={handleSubmit(onSubmit)}>
                   <label htmlFor="ccnumber">
                     Card Number * (E.G.: 9999 9999 9999 9995){" "}
                   </label>
@@ -255,20 +248,27 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
                   /> }
                   {makeSalesResponse?.errorMessage ? <p>Your provided card information is not correct.</p> : <></>}
 
-                  <input type="submit" value="pay" />
+                  
                 </form>
               </div>
+              {paymentData.status == "inprogress" ? <input form="ccForm" type="submit" value="pay" /> : <>  </>}
+              {paymentData.status && paymentData.status !== "inprogress" ? <div className="overlay-modal-container">
+                  <div className="overlay-modal">
+                    <div className="overlay-modal-text-content"> <p>Your payment has been done already</p></div>
+                  </div>
+                </div> : <></>
+              }
             </div>
 
             <div className="payment_details">
               <h4>Payment Summary</h4>
-              <span className="payment_span">Amount to be paid : <span>{paymentData && "$" + paymentData.amount}</span></span>
-              <span className="payment_span">Amount paid by reward certificate : <span>{paymentData && "$" + paymentData.amount}</span></span>
-              <span className="payment_span">Cost to credit card : <span>{paymentData && "$" + paymentData.amount}</span></span>
+              <span className="payment_span">Amount to be paid : <span>{paymentData && "$" + paymentData.json.amount}</span></span>
+              <span className="payment_span">Amount paid by reward certificate : <span>{"$" + amountPaidByRC}</span></span>
+              <span className="payment_span">Cost to credit card : <span>{"$" + costToCredit}</span></span>
               
             </div>
           </div>
-          <div style={{textAlign: "center", marginBottom: "40px"}}> <Link href={paymentData.cancel_url}>Cancel and go back to store</Link></div>
+          <div className="backToStore" style={{textAlign: "center", marginBottom: "40px"}}> <Link href={paymentData.json ? paymentData.json.cancel_url : '/'}>Cancel and go back to store</Link></div>
           <div className="error"></div>
           <div className="footer">
             <div></div>
@@ -294,8 +294,8 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
           </div>
         </div>
       </div>
-      {modalLoading ? <Loader/> : <></>}
-      
+        {modalLoading ? <Loader/> : <></>}
+        
     </>
   );
 }
@@ -303,7 +303,7 @@ function mapStateToProps(state, ownProps) {
   return {
     paymentReq: state.adsServices.paymentReq,
     makeSalesResponse: state.adsServices.makeSalesResponse,
-    rcNumber : state.rewardReducer.rcNumber,
+    rcDetails : state.rewardReducer.rcDetails,
 
   };
 }
