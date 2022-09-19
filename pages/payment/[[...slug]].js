@@ -273,7 +273,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
           <div className="footer">
             <div></div>
             <div><h3>&copy; POWERED BY SAADIA GROUP</h3></div>
-            <div><a href="https://c.comenity.net/ac/fashiontofigure/public/home" target="_blank">PAY BILLS</a></div>
+            <div><a href="https://c.comenity.net/ac/fashiontofigure/public/home" target="_blank" rel="noopener noreferrer">PAY BILLS</a></div>
           </div>
         </>
       ) }
