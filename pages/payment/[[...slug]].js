@@ -3,7 +3,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import { useForm } from "react-hook-form";
 import {useRouter} from "next/router"
 import { connect } from "react-redux";
-import { adsSales } from "../../store/actions/adsActions";
+import { adsSales, checkBalance } from "../../store/actions/adsActions";
 import PropTypes from "prop-types";
 import { FaRegCreditCard } from "react-icons/fa";
 import { IoMdArrowDropright, IoMdArrowDropdown } from "react-icons/io";
@@ -44,25 +44,31 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
 
   const onSubmit = (data) => {
     console.log("onSubmit paymentReq", paymentData);
-    let cardNumber = data.ccnumber;
-    let address1 = paymentData && paymentData.json.customer.billing_address.line1;
-    let postalCode =
-      paymentData && paymentData.json.customer.billing_address.postal_code;
-    let amount = paymentData && paymentData.json.amount;
-    shop = paymentData && paymentData.json.cancel_url;
-    httpsLength = "https://".length;
-    lastIndex = shop.indexOf(".com") - 4;
-    shop = shop.substr(httpsLength, lastIndex);
 
+    let cardNumber = data.ccnumber;
+    let paymentjson = paymentData && paymentData.json;
+    let address1 = paymentjson.customer.billing_address.line1;
+    let postalCode =
+    paymentjson.customer.billing_address.postal_code;
+    let amount = paymentjson.amount;
+    let adsAmount = costToCredit;
+    let paymentId = paymentjson.id;
+    let cancelURL = paymentjson.cancel_url;
     const payload = {
-      creditCardNumber: cardNumber,
-      amount: amount,
-      billingAddress: {
-        address1: address1,
-        postalCode: postalCode,
+      "paymentId":paymentId,
+      "cancel_url":cancelURL,
+      "creditCardInfo":{
+        creditCardNumber: cardNumber,
+        amount:adsAmount,
+        billingAddress: {
+          address1: address1,
+          postalCode: postalCode,
+        },
       },
-      paymentId: shop,
+      "RewardCertificates":rcDetails,
+      amount: amount,
     };
+    console.log(payload)
     adsSales(payload).catch((error) => {
       alert("Failed to ADS Sales", error);
     });
@@ -89,46 +95,17 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
 
   useEffect(() => {
       
-       console.log('makeSalesResponse',makeSalesResponse)
-      if (makeSalesResponse && makeSalesResponse.accessToken) {
-        let accessToken = makeSalesResponse.accessToken;
-        shop = paymentData ? paymentData.json.cancel_url : "";
-        httpsLength = "https://".length;
-        lastIndex = shop?shop.indexOf(".com") - 4 : null;
-        shop = shop?shop.substr(httpsLength, lastIndex) : "";
-        let payload = {
-          id: paymentData.json.gid,
-          shop: shop,
-          accesstoken: accessToken,
-        };
-        if (makeSalesResponse.status === "success") {
-          payload = {
-            ...payload,
-            type: "paymentresolve",
-          };
-          fetch("/api/" + payload.type, {
-            method: "POST", // POST for create, PUT to update when id already exists.
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify(payload),
-          })
-            .then((res) => res.json())
-            .then((res) => {
-              console.log("Payment Resolved" + res.url);
-              window.location.href = res.url;
-            })
-            .catch((err) => console.log("error in payment", err));
-        } else if (makeSalesResponse.status === "failed") {
-          payload = {
-            code: makeSalesResponse.code,
-            merchantMessage: makeSalesResponse.errorMessage
-          };
-        }    
-      } 
+      console.log('makeSalesResponse',makeSalesResponse)
+      if (makeSalesResponse) {
+           if(makeSalesResponse.redirect_url){
+             window.location.href = makeSalesResponse.redirect_url;
+           }else{
+          }
+      }
   }, [makeSalesResponse]);
 
   const modalRef = useRef()
 
- 
   // Function to toggle the Check balance Modal
   const toggleModal = ()=> {
     setModalLoading(true)
@@ -150,19 +127,20 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
       return
     }
     setLoadingSubmit(true)
-    const rcNumber = data.rcnumber;
-    const rcPin = data.rcpin
-    const result = await fetch("http://localhost:3000/api/getrcbalance1")
-    let balanceData = await result.json()
-    
-    if(costToCredit < balanceData.balance && costToCredit !== 0){
-      balanceData.balance = parseFloat(costToCredit)
-      addRcNumber({rcNumber, rcPin, amountPaidByRC : balanceData.balance});
-    }else if(costToCredit > balanceData.balance && costToCredit !== 0){
-      addRcNumber({rcNumber, rcPin, amountPaidByRC : balanceData.balance})
+    const cardNumber = data.rcnumber;
+    const pinNumber = data.rcpin;
+    const result = adsApi.checkBalance({cardNumber,pinNumber}).catch(error=>{return error});
+    let balanceData = await result;
+    console.log(balanceData.balance)
+    if(balanceData.balance){
+      if(costToCredit < balanceData.balance && costToCredit !== 0){
+        balanceData.balance = parseFloat(costToCredit)
+        addRcNumber({cardNumber, pinNumber, amountPaidByRC : balanceData.balance});
+      }else if(costToCredit > balanceData.balance && costToCredit !== 0){
+        addRcNumber({cardNumber, pinNumber, amountPaidByRC : balanceData.balance})
+      }
     }
-
-    setLoadingSubmit(false)
+    setLoadingSubmit(false);
   }
 
   //Each time Reward card details getting saved inside the store our cost to credit card amount will get calculated
@@ -172,7 +150,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
     setCostToCredit(paymentData.json && parseFloat((paymentData.json.amount - totalAmount).toFixed(2)))
   },[rcDetails])
 
-
+  const ccValidation =  (parseFloat(costToCredit) > 0) ? "The credit card number is required." : false
 
   return (
     <>
@@ -222,7 +200,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
                   <input
                     id="ccnumber"
                     {...register("ccnumber", {
-                      required: "The credit card number is required.",
+                      required: ccValidation,
                       pattern: {
                         value: /\d+/,
                         message: "This input is number only.",
@@ -233,7 +211,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
                       },
                     })}
                   />
-                  {makeSalesResponse?.errorMessage ? <></> :
+                  {makeSalesResponse?.errors ? <></> :
                   <ErrorMessage
                     errors={errors}
                     name="ccnumber"
@@ -246,7 +224,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
                         : null;
                     }}
                   /> }
-                  {makeSalesResponse?.errorMessage ? <p>Your provided card information is not correct.</p> : <></>}
+                  {makeSalesResponse?.errors ? <p>Your provided card information is not correct.</p> : <></>}
 
                   
                 </form>
