@@ -44,7 +44,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
 
   const onSubmit = (data) => {
     console.log("onSubmit paymentReq", paymentData);
-
+    setLoading(true);
     let cardNumber = data.ccnumber;
     let paymentjson = paymentData && paymentData.json;
     let address1 = paymentjson.customer.billing_address.line1;
@@ -72,6 +72,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
     adsSales(payload).catch((error) => {
       alert("Failed to ADS Sales", error);
     });
+    setLoading(false);
   };
 
 
@@ -100,6 +101,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
            if(makeSalesResponse.redirect_url){
              window.location.href = makeSalesResponse.redirect_url;
            }else{
+
           }
       }
   }, [makeSalesResponse]);

@@ -5,8 +5,8 @@ function Loader(){
         
       <div className="loader_container">
         <div className="loader_overlay">
-            
-                <div className="loader_circle"/>
+            <div className="loader_circle"/>
+            <div className="overlay-message">Dont Refresh the page !!</div>
         </div>
       </div>
     )
