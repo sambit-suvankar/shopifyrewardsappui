@@ -6,7 +6,7 @@ import { connect } from "react-redux";
 import { adsSales, checkBalance } from "../../store/actions/adsActions";
 import PropTypes from "prop-types";
 import { FaRegCreditCard } from "react-icons/fa";
-import { IoMdArrowDropright, IoMdArrowDropdown } from "react-icons/io";
+// import { IoMdArrowDropright, IoMdArrowDropdown } from "react-icons/io";
 import {ImCancelCircle} from 'react-icons/im'
 import { store } from "../../store/store";
 import Link from "next/link";
@@ -26,15 +26,16 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
     register : register2,
     formState: { errors : errors2 },
     handleSubmit : handleSubmit2,
-    // reset
+    reset
   } = useForm({ criteriaMode: "all" });
   const [ loading, setLoading ] = useState(true);
-  const [ modalLoading, setModalLoading ] = useState(false);
-  const [ collapsible, setCollapsible] = useState(false);
-  const [ paymentData, setPaymentData] = useState({})
+  const [ modalLoading, setModalLoading ] = useState(false); // state of loader for modal component loading
+  const [ paymentData, setPaymentData] = useState({})   // state for the fetched data at the time of page mounting
   const [ amountPaidByRC, setAmountPaidByRC ] = useState(0)
-  const [ costToCredit, setCostToCredit ] = useState(0);
-  const [ loadingSubmit, setLoadingSubmit ]= useState(false)
+  const [ costToCredit, setCostToCredit ] = useState(0);  
+  const [ loadingSubmit, setLoadingSubmit ]= useState(false)  // For spinner state
+  const [ rcCard, setRcCard ] = useState({visible : true})  // State for RC card details used in Check balance modal and warning message
+  const [ appliedMsg, setAppliedMsg ] = useState(false) //State for warning message visibility of RC card section
   let shop
   let httpsLength
   let lastIndex
@@ -118,23 +119,42 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
     }, 2000);
   }
 
-  // Function to close the check balance modal
+  // Function to close the check balance modal and wipe balance data from the state
   const closeModal = () => {
     modalRef.current.classList.toggle('hide-modal')
+    setRcCard({...rcCard,visible : true, modalErrorMsg : ""})
+    reset()
+  }
+  // Funtion to check balance again while staying in the same modal
+  const checkBalanceAgain = () => {
+    setRcCard({...rcCard, visible : true, modalErrorMsg : ""})
+    reset()
   }
 
   // This Function is called at the time of applying Reward card 
   const onRcNumberSubmit = async(data) => {
     console.log(data)
-    if(!data.rcnumber || !data.rcpin){
+    
+    if(!data.rcnumber || !data.rcpin){  // Condition for empty rc number or Pin to set the error messagex`
+      setRcCard({...rcCard, errorMsg : "Sorry, reward certificate number & PIN is required."})
       return
     }
+    setAppliedMsg(false)
     setLoadingSubmit(true)
     const cardNumber = data.rcnumber;
     const pinNumber = data.rcpin;
     const result = adsApi.checkBalance({cardNumber,pinNumber}).catch(error=>{return error});
     let balanceData = await result;
-    console.log(balanceData.balance)
+    console.log(balanceData)
+
+    if(!balanceData.balance){   // Condition for invalid RC Card or PIN to set the error mesage
+      setLoadingSubmit(false);
+      setRcCard({...rcCard, errorMsg : "Uh-oh! Your reward certificate number or pin number seem to be invalid."})
+      return
+    }
+
+    setRcCard({...rcCard,errorMsg : '', balance : balanceData.balance})
+
     if(balanceData.balance){
       if(costToCredit < balanceData.balance && costToCredit !== 0){
         balanceData.balance = parseFloat(costToCredit)
@@ -143,7 +163,9 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
         addRcNumber({cardNumber, pinNumber, amountPaidByRC : balanceData.balance})
       }
     }
+    setAppliedMsg(true)
     setLoadingSubmit(false);
+    
   }
 
   //Each time Reward card details getting saved inside the store our cost to credit card amount will get calculated
@@ -151,9 +173,35 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
     let totalAmount = rcDetails.reduce((acc, obj) => acc + obj.amountPaidByRC, 0)
     setAmountPaidByRC(totalAmount)
     setCostToCredit(paymentData.json && parseFloat((paymentData.json.amount - totalAmount).toFixed(2)))
+    if(rcDetails.length == 0){
+      setAppliedMsg(false)
+    }
   },[rcDetails])
 
+
+  const checkRcBalance = async(data) => {
+    if(!data.rc_num || !data.rc_pin){  // Condition for empty rc number or Pin to set the error messagex`
+      setRcCard({...rcCard, modalErrorMsg : "Sorry, reward certificate number & PIN is required."})
+      return
+    }
+    setLoadingSubmit(true)
+    const cardNumber = data.rc_num;
+    const pinNumber = data.rc_pin;
+    const result = adsApi.checkBalance({cardNumber,pinNumber}).catch(error=>{return error});
+    let balanceData = await result;
+    console.log(balanceData.balance)
+    if(!balanceData.balance){   // Condition for invalid RC Card or PIN to set the error mesage
+      setLoadingSubmit(false);
+      setRcCard({...rcCard, modalErrorMsg : "Uh-oh! Your reward certificate number or pin number seem to be invalid."})
+      return
+    }
+    setRcCard({cardNumber, balance : balanceData.balance, visible : false, modalErrorMsg : ""})
+    reset()
+    setLoadingSubmit(false)
+  }
   const ccValidation =  (parseFloat(costToCredit) > 0) ? "The credit card number is required." : false
+
+ 
 
   return (
     <>
@@ -165,14 +213,13 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
           <div className="payment_detais_container">
             <div className="card-details">
               <RewardCardDetails
-              register2={register2}
-              error2={errors2}
-              handleSubmit2={handleSubmit2}
-              onRcNumberSubmit={(data)=> onRcNumberSubmit(data)}
-              toggleModal={() => toggleModal()}
-              loadingSubmit={loadingSubmit}
-              setLoadingSubmit={(v) => setLoadingSubmit(v)}
-              // reset={()=> reset()}
+                onRcNumberSubmit={(data)=> onRcNumberSubmit(data)}
+                toggleModal={() => toggleModal()}
+                loadingSubmit={loadingSubmit}
+                setLoadingSubmit={(v) => setLoadingSubmit(v)}
+                rcCard={rcCard}
+                appliedMsg={appliedMsg}
+                costToCredit={costToCredit}
               />
               <div className="card_details_container">
                 <label htmlFor="credit" className="credit">
@@ -263,16 +310,69 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
         <div className="modal">
           <ImCancelCircle className="cancelModal" onClick={()=> closeModal()}/>
           <h1>HOW MUCH DO I HAVE LEFT?</h1>
+          {rcCard.visible ? 
+          <>
           <h3>Enter your 19-digit New York and Company Rewards Certificate number and your 4-digit PIN below</h3>
-          <div className="modal_form" style={{marginTop: "50px"}}>
-            <form>
+          <div className="modal_form">
+            {rcCard.modalErrorMsg ? <span style={{color : 'red'}}>{rcCard.modalErrorMsg}</span> : <></>}
+            <form onSubmit={handleSubmit2(checkRcBalance)}>
               <label>Reward Certificate Number</label>
-              <input></input>
+              <input maxLength="19" type="number" {...register2("rc_num",{minLength: {
+                        value: 19,
+                        message: "Card number must be of 19 digits",
+                      },maxLength : {
+                        value : 19,
+                        message: "Card number must be of 19 digits"
+                      },
+                      })}>
+              </input>
+              <ErrorMessage
+                        errors={errors2}
+                        name="rc_num"
+                        render={({ messages }) => {
+                        console.log("messages", messages);
+                        return messages
+                            ? Object.entries(messages).map(([type, message]) => (
+                                <p key={type}>{message}</p>
+                            ))
+                            : null;
+                        }}
+                    />
               <label>PIN Number</label>
-              <input></input>
-              <button type="submit" style={{letterSpacing: "1px", cursor: "pointer", backgroundColor: "black"}}>Check My Balance</button>
+              <input maxLength="4" type="number" {...register2("rc_pin",{minLength: {
+                        value: 4,
+                        message: "PIN must be of 4 digits",
+                      },maxLength : {
+                        value : 4,
+                        message: "PIN must be of 4 digits"
+                      },})}>
+              </input>
+              <ErrorMessage
+                        errors={errors2}
+                        name="rc_pin"
+                        render={({ messages }) => {
+                        console.log("messages", messages);
+                        return messages
+                            ? Object.entries(messages).map(([type, message]) => (
+                                <p key={type}>{message}</p>
+                            ))
+                            : null;
+                        }}
+                    />
+              <button type="submit" style={{letterSpacing: "1px", cursor: "pointer", backgroundColor: "black", display: "flex", justifyContent : "center"}}>{loadingSubmit && <span className="spinner"></span>}Check My Balance</button>
             </form>
           </div>
+          </> : 
+          <div className="balance_sec">
+            <h3>CARD NUMBER</h3>
+            <h2>{rcCard.cardNumber && rcCard.cardNumber.replace(/\d{15}(\d{4})/, "***** ***** ***** $1")}</h2>
+            <h3>BALANCE</h3>
+            <span style={{color : 'black', fontSize : '60px', fontWeight : '500', margin : '15px'}}>{rcCard.balance && '$'+ rcCard.balance}</span>
+            <div className="btn_group">
+              <button onClick={()=> closeModal()}>CLOSE</button>
+              <button onClick={()=> checkBalanceAgain()}>CHECK ANOTHER BALANCE</button>
+            </div>
+          </div>}
         </div>
       </div>
         {modalLoading ? <Loader/> : <></>}

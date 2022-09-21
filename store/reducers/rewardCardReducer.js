@@ -5,7 +5,7 @@ export default function rewardReducer(state = initialState, action) {
     case types.REWARD_CARD_ADD_SUCCESS:
       return { ...state, rcDetails : [...state.rcDetails, action.payload]}
     case types.REWARD_CARD_REMOVE_SUCCESS :
-        return { ...state, rcDetails : state.rcDetails.filter(rcDetail => rcDetail.rcNumber !== action.payload)}
+        return { ...state, rcDetails : state.rcDetails.filter(rcDetail => rcDetail.cardNumber !== action.payload)}
     default:
       return state;
   }
