@@ -36,10 +36,6 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
   const [ loadingSubmit, setLoadingSubmit ]= useState(false)  // For spinner state
   const [ rcCard, setRcCard ] = useState({visible : true})  // State for RC card details used in Check balance modal and warning message
   const [ appliedMsg, setAppliedMsg ] = useState(false) //State for warning message visibility of RC card section
-  let shop
-  let httpsLength
-  let lastIndex
-
   const { slug } = useRouter().query;
   const id = slug && slug.length > 0 && slug[0];
 

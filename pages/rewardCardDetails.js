@@ -72,10 +72,10 @@ function RewardCardDetailsContainer ({ rcDetails, rcCard, removeRcNumber, onRcNu
                       </div>
 
                       {/* Error Handling */}
-                      {appliedMsg && !rcCard.errorMsg ? 
+                      {appliedMsg && rcCard && !rcCard.errorMsg ? 
                       <span>${rcDetails.length > 0 && rcDetails[rcDetails.length -1].amountPaidByRC} successfully applied to order. Your card will have ${rcDetails.length > 0 && (rcCard.balance - rcDetails[rcDetails.length -1].amountPaidByRC).toFixed(2)} balance remaining after this transaction is completed.</span>
                       :
-                      <span>{rcCard.errorMsg}</span>}
+                      <span>{rcCard && rcCard.errorMsg}</span>}
                       <ErrorMessage
                         errors={errors3}
                         name="rcnumber"
