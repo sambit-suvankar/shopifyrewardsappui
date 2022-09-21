@@ -109,10 +109,8 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
   // Function to toggle the Check balance Modal
   const toggleModal = ()=> {
     setModalLoading(true)
-    setTimeout(() => {
-      setModalLoading(false)
-      modalRef.current.classList.toggle('hide-modal')
-    }, 2000);
+    setModalLoading(false)
+    modalRef.current.classList.toggle('hide-modal')
   }
 
   // Function to close the check balance modal and wipe balance data from the state
