@@ -100,7 +100,8 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
       console.log('makeSalesResponse',makeSalesResponse)
       if (makeSalesResponse) {
            if(makeSalesResponse.redirect_url){
-             window.location.href = makeSalesResponse.redirect_url;
+            console.log(makeSalesResponse.redirect_url)
+            window.location.href = makeSalesResponse.redirect_url;
            }else{
 
           }
