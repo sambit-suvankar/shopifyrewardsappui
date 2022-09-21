@@ -109,6 +109,20 @@ input {
   font-size: 14px;
   color: #000000;
 }
+input[type="number"]:disabled {
+  background: #393939;
+}
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
 
 label {
   line-height: 2;
@@ -213,7 +227,7 @@ button {
 }
 .card-details{
   width: 100%;
-  padding: 20px;
+  padding: 0px;
   grid-column-start: 2;
   display: flex;
   justify-content: center;
@@ -245,6 +259,7 @@ button {
   display: flex;
   flex-direction: column;
   font-size: 12px;
+  margin-bottom: 10px;
 }
 .rc-card{
   display: flex;
@@ -330,6 +345,17 @@ button {
   border-radius: 10px;
   padding: 20px;
 }
+.modal_form span{
+  font-size: 12px;
+  margin: 0 15px;
+  color: red;
+}
+.modal_form label{
+  margin-top: 5px;
+}
+.modal_form button{
+  padding: 10px;
+}
 .cancelModal{
   height: 25px;
   width: 25px;
@@ -340,18 +366,24 @@ button {
 }
 @media only screen and (max-width: 820px) {
   .modal {
-    height: 60vh;
+    /* height: 60vh; */
     width: 90vw;
   }
   .modal h1{
-    font-size: 24px;
+    font-size: 1.1rem;
   }
   .modal h3{
     font-size: 14px;
     margin: 0;
+    text-align: center;
   }
   .modal_form{
     margin-top: 40px;
+  }
+  .modal_form span{
+    font-size: 12px;
+    text-align: left;
+    color: red;
   }
   button[type="submit"]{
     padding: 12px;
@@ -543,4 +575,57 @@ button {
   100%{
     transform: rotate(360deg);
   }
+}
+
+
+.balance_sec h2{
+  font-family: sans-serif;
+  font-weight: bold;
+  letter-spacing: 1px;
+  margin: 15px;
+  color: #000000;
+}
+.balance_sec h3{
+  font-family: sans-serif;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-align: left;
+  margin: 0 15px;
+}
+
+.btn_group{
+  display: flex;
+  margin: 50px 10px;
+}
+.btn_group button:nth-child(2){
+  background-color: white;
+  color: #000000;
+}
+.btn_group button:nth-child(2):hover{
+  background-color: black;
+  color: white;
+}
+.btn_group button{
+  display: flex;
+  margin: 0 10px;
+  cursor: pointer;
+  background-color: #000000;
+  font-family: sans-serif;
+  letter-spacing: 2px;
+}
+
+@media only screen and (max-width : 820px) {
+  .btn_group button{
+    margin: 0 5px;
+    cursor: pointer;
+    background-color: #000000;
+    font-family: sans-serif;
+    letter-spacing: 0px;
+    font-size: 10px;
+  }
+  .btn_group{
+    display: flex;
+    margin: 25px 0px;
+  }
+  
 }
