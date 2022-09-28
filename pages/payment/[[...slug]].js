@@ -15,6 +15,7 @@ import { fetchPaymentRequest } from '../../store/actions/adsActions';
 import * as adsApi from '../../store/api/adsApi';
 import Loader from "../loader";
 import RewardCardDetails from "../rewardCardDetails";
+import PaymentMessages from "../../store/api/messages.json"
 
 function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, makeSalesResponse, rcDetails, fetchPaymentRequest, ...props }) {
   const {
@@ -36,12 +37,19 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
   const [ loadingSubmit, setLoadingSubmit ]= useState(false)  // For spinner state
   const [ rcCard, setRcCard ] = useState({visible : true})  // State for RC card details used in Check balance modal and warning message
   const [ appliedMsg, setAppliedMsg ] = useState(false) //State for warning message visibility of RC card section
+  const [ paymentMsg, setPaymentMsg ] = useState('')
+  const [ plccLoading, setPlccLoading ] = useState(false)
+  let shop
+  let httpsLength
+  let lastIndex
+
   const { slug } = useRouter().query;
   const id = slug && slug.length > 0 && slug[0];
 
   const onSubmit = (data) => {
     console.log("onSubmit paymentReq", paymentData);
     setLoading(true);
+    setPlccLoading(true)
     let cardNumber = data.ccnumber;
     let paymentjson = paymentData && paymentData.json;
     let address1 = paymentjson.customer.billing_address.line1;
@@ -94,6 +102,18 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
   useEffect(() => {
       
       console.log('makeSalesResponse',makeSalesResponse)
+
+      // Here we have written Conditions to Show the error messages that we are getting after we click on the "PAY" button
+      if(makeSalesResponse && makeSalesResponse.error){
+        for(var keys of Object.keys(PaymentMessages)){
+          if(keys === makeSalesResponse.error[0].errorMessage){
+            setPaymentMsg(PaymentMessages[keys])
+            // return
+          }else{
+            setPaymentMsg(PaymentMessages[Object.keys(PaymentMessages)[2]])
+          }
+        }
+      }
       if (makeSalesResponse) {
            if(makeSalesResponse.redirect_url){
             console.log(makeSalesResponse.redirect_url)
@@ -102,6 +122,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
 
           }
       }
+      setPlccLoading(false)
   }, [makeSalesResponse]);
 
   const modalRef = useRef()
@@ -273,7 +294,8 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
                   
                 </form>
               </div>
-              {paymentData.status == "inprogress" ? <input form="ccForm" type="submit" value="pay" /> : <>  </>}
+              {paymentMsg ? <span style={{color : "red", marginTop: "10px", textAlign: "center", fontSize: "12px"}}>{paymentMsg}</span> : <></>}
+              {paymentData.status == "inprogress" ? <button disabled={plccLoading} form="ccForm" type="submit" value="pay" style={{display: 'flex', justifyContent : 'center', cursor: 'pointer'}}>{plccLoading && <span className="spinner"></span>} PAY</button> : <>  </>}
               {paymentData.status && paymentData.status !== "inprogress" ? <div className="overlay-modal-container">
                   <div className="overlay-modal">
                     <div className="overlay-modal-text-content"> <p>Your payment has been done already</p></div>

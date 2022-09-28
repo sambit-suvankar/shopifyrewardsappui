@@ -1,0 +1,9 @@
+{
+
+    "checkout_aliiancedata_error.sales:::D":"Issues while using the card for payment. Please use another card or retry",
+  
+    "checkout_plcc_error.sales_down":"Ugh!  We're experiencing some technical difficulties. Please try again later.",
+  
+    "default":"Ugh!  We're experiencing some technical difficulties. Please try again later."
+  
+  }
