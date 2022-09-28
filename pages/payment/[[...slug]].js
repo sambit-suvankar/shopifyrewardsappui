@@ -39,6 +39,7 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
   const [ appliedMsg, setAppliedMsg ] = useState(false) //State for warning message visibility of RC card section
   const [ paymentMsg, setPaymentMsg ] = useState('')
   const [ plccLoading, setPlccLoading ] = useState(false)
+  const [ errorModal, setErrorModal ] = useState(false)
   let shop
   let httpsLength
   let lastIndex
@@ -95,6 +96,10 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
           setCostToCredit((data)=> data = parseFloat(JSON.parse(paymentReq.json).amount))
         }
         setLoading(false);
+      }).catch(err =>{ 
+        console.log(err);
+        setErrorModal(err)
+        setLoading(false)
       }) 
     } 
   },[id])
@@ -225,6 +230,13 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
       ) : (
         <>
           <h1>TrendSetter Rewards</h1>
+          {errorModal ? 
+          (<div className="overlay-error-modal-container">
+                  <h1>Looking this good takes some time...</h1>
+                  <h3>BUT TRUST US. IT'S ALWAYS WORTH IT IN THE END.</h3>
+                  <h3>WE APPRECIATE YOUR PATIENCE WHILE WE MAKE A FEW UPGRADES TO THE SITE</h3>
+          </div>) :
+          (
           <div className="payment_detais_container">
             <div className="card-details">
               <RewardCardDetails
@@ -301,9 +313,9 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
                     <div className="overlay-modal-text-content"> <p>Your payment has been done already</p></div>
                   </div>
                 </div> : <></>
-              }
+                  } 
             </div>
-
+                  
             <div className="payment_details">
               <h4>Payment Summary</h4>
               <span className="payment_span">Amount to be paid : <span>{paymentData && "$" + paymentData.json.amount}</span></span>
@@ -312,6 +324,8 @@ function CreditCardForm({ adsSales, addRcNumber, removeRcNumber, paymentReq, mak
               
             </div>
           </div>
+          )}
+          
           <div className="backToStore" style={{textAlign: "center", marginBottom: "40px"}}> <Link href={paymentData.json ? paymentData.json.cancel_url : '/'}>Cancel and go back to store</Link></div>
           <div className="error"></div>
           <div className="footer">

@@ -229,6 +229,7 @@ button {
   width: 100%;
   padding: 0px;
   grid-column-start: 2;
+  grid-row-start: 1;
   display: flex;
   justify-content: center;
   flex-direction: column;
@@ -410,6 +411,8 @@ button {
   color: rgb(0, 0, 0);
   text-align: center;
   font-weight: 400;
+  grid-column-start: 3;
+  grid-row-start: 1;
   /* font-size: 20px; */
   display: flex;
   flex-direction: column;
@@ -523,8 +526,9 @@ button {
 .overlay-modal-container{
   height: 100%;
   width: 100%;
-  position: absolute;
-  transform: translateX(-14px);
+  position: absolute;  
+  grid-column-start: 2;
+  grid-row-start: 1 ;
 }
 .overlay-modal{
     height: 100%;
@@ -629,4 +633,41 @@ button {
     margin: 25px 0px;
   }
   
+}
+
+.overlay-error-modal-container{
+  height: 60vh;
+  width: 100vw;
+  /* position: absolute; */
+  grid-column-start: 1;
+  grid-column-end: 4;
+  grid-row-start: 1 ;
+  color: #282c34;
+  text-align: center;
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  /* transform: translateX(-35vw); */
+}
+.overlay-error-modal-container h1{
+  font-family: 'Times New Roman', Times, serif;
+  letter-spacing: 2px;
+}
+.overlay-error-modal-container h3{
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 400;
+  letter-spacing: 2px;
+}
+
+@media only screen and (max-width : 820px) {
+  /* .overlay-error-modal-container{
+    height: 160%;
+    width: 100%;
+    position: absolute;
+    z-index: 3;
+    transform: translateY(-10%);
+    transform: translateX(0);
+    bottom: 0;
+  } */
 }
